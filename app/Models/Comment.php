@@ -44,4 +44,24 @@ class Comment extends Model
     {
         return $this->hasMany(Comment::class, 'parent_id');
     }
+
+    /**
+     * Increment likes count
+     */
+    public function incrementLikes()
+    {
+        $this->increment('likes_count');
+        return $this;
+    }
+
+    /**
+     * Decrement likes count
+     */
+    public function decrementLikes()
+    {
+        if ($this->likes_count > 0) {
+            $this->decrement('likes_count');
+        }
+        return $this;
+    }
 }

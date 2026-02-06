@@ -23,13 +23,15 @@ class SearchController extends Controller
             ], 400);
         }
 
-        $elonlar = Elon::with(['ustoz.user'])
+        $elonlar = Elon::with(['ustoz.user', 'fan'])
             ->approved()
             ->where(function($q) use ($query) {
-                $q->where('title', 'LIKE', "%{$query}%")
-                  ->orWhere('description', 'LIKE', "%{$query}%")
-                  ->orWhere('subject', 'LIKE', "%{$query}%")
-                  ->orWhere('location', 'LIKE', "%{$query}%");
+                $q->where('sarlavha', 'LIKE', "%{$query}%")
+                  ->orWhere('tavsif', 'LIKE', "%{$query}%")
+                  ->orWhere('joylashuv', 'LIKE', "%{$query}%")
+                  ->orWhereHas('fan', function($fanQuery) use ($query) {
+                      $fanQuery->where('nomi', 'LIKE', "%{$query}%");
+                  });
             })
             ->latest()
             ->paginate(20);
@@ -49,9 +51,10 @@ class SearchController extends Controller
 
         $ustozlar = Ustoz::with('user')
             ->where(function($q) use ($query) {
-                $q->where('full_name', 'LIKE', "%{$query}%")
-                  ->orWhere('location', 'LIKE', "%{$query}%")
-                  ->orWhere('education', 'LIKE', "%{$query}%");
+                $q->where('ism', 'LIKE', "%{$query}%")
+                  ->orWhere('familiya', 'LIKE', "%{$query}%")
+                  ->orWhere('joylashuv', 'LIKE', "%{$query}%")
+                  ->orWhere('bio', 'LIKE', "%{$query}%");
             })
             ->paginate(20);
 

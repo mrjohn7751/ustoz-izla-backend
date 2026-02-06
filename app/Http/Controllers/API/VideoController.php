@@ -67,7 +67,7 @@ class VideoController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Videolarni yuklashda xatolik yuz berdi',
             ], 500);
         }
     }
@@ -119,6 +119,14 @@ class VideoController extends Controller
 
             $user = Auth::user();
 
+            // Ustoz profilini tekshirish
+            if (!$user->ustoz) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Siz ustoz sifatida ro\'yxatdan o\'tmagansiz',
+                ], 403);
+            }
+
             $videoPath = null;
             if ($request->hasFile('video')) {
                 $videoPath = $request->file('video')->store('videos', 'public');
@@ -132,14 +140,14 @@ class VideoController extends Controller
             }
 
             $video = Video::create([
-                'ustoz_id' => $user->id,
+                'ustoz_id' => $user->ustoz->id,
                 'fan_id' => $validated['subject'],
                 'sarlavha' => $validated['title'],
                 'tavsif' => $validated['description'],
                 'video_url' => $videoPath,
                 'thumbnail' => $thumbnailPath,
                 'davomiyligi' => 0,
-                'status' => 'approved',
+                'status' => 'pending', // Admin tasdiqlashi kerak
                 'views_count' => 0,
                 'likes_count' => 0,
             ]);
@@ -148,11 +156,11 @@ class VideoController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Video yuklandi!',
+                'message' => 'Video yuklandi! Admin tasdiqlashini kuting.',
                 'data' => [
                     'id' => $video->id,
                     'title' => $video->sarlavha,
-                    'status' => 'approved',
+                    'status' => 'pending',
                 ],
             ], 201);
 
@@ -164,7 +172,7 @@ class VideoController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => 'Video yuklashda xatolik yuz berdi',
             ], 500);
         }
     }
@@ -195,8 +203,16 @@ class VideoController extends Controller
     {
         try {
             $user = Auth::user();
+
+            if (!$user->ustoz) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Siz ustoz sifatida ro\'yxatdan o\'tmagansiz',
+                ], 403);
+            }
+
             $videos = Video::with('fan')
-                ->where('ustoz_id', $user->id)
+                ->where('ustoz_id', $user->ustoz->id)
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
 
@@ -218,8 +234,11 @@ class VideoController extends Controller
             $user = Auth::user();
             $video = Video::findOrFail($id);
 
-            if ($video->ustoz_id !== $user->id) {
-                return response()->json(['success' => false], 403);
+            if (!$user->ustoz || $video->ustoz_id !== $user->ustoz->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ruxsat yo\'q'
+                ], 403);
             }
 
             if ($video->video_url) {

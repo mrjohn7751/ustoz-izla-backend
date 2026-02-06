@@ -22,8 +22,19 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:20|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            // Kuchli parol: min 8, katta harf, kichik harf, raqam
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/',      // kamida 1 kichik harf
+                'regex:/[A-Z]/',      // kamida 1 katta harf
+                'regex:/[0-9]/',      // kamida 1 raqam
+            ],
             'role' => 'required|in:fan,ustoz',
+        ], [
+            'password.regex' => 'Parol kamida 1 katta harf, 1 kichik harf va 1 raqam bo\'lishi kerak',
         ]);
 
         if ($validator->fails()) {
@@ -63,10 +74,10 @@ class AuthController extends Controller
                 ]
             ], 201);
         } catch (\Exception $e) {
+            // Security: Exception details hidden
             return response()->json([
                 'success' => false,
-                'message' => 'Registration failed',
-                'error' => $e->getMessage()
+                'message' => 'Ro\'yxatdan o\'tishda xatolik yuz berdi'
             ], 500);
         }
     }
@@ -136,7 +147,12 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        $user = $request->user()->load($request->user()->role);
+        $user = $request->user();
+
+        // Faqat ustoz rolida bo'lsa, ustoz profilini yuklash
+        if ($user->role === 'ustoz') {
+            $user->load('ustoz');
+        }
 
         return response()->json([
             'success' => true,
@@ -179,10 +195,10 @@ class AuthController extends Controller
                 'data' => $user
             ]);
         } catch (\Exception $e) {
+            // Security: Exception details hidden
             return response()->json([
                 'success' => false,
-                'message' => 'Update failed',
-                'error' => $e->getMessage()
+                'message' => 'Profilni yangilashda xatolik yuz berdi'
             ], 500);
         }
     }
@@ -194,7 +210,18 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'current_password' => 'required|string',
-            'new_password' => 'required|string|min:8|confirmed',
+            // Kuchli parol: min 8, katta harf, kichik harf, raqam
+            'new_password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+            ],
+        ], [
+            'new_password.regex' => 'Parol kamida 1 katta harf, 1 kichik harf va 1 raqam bo\'lishi kerak',
         ]);
 
         if ($validator->fails()) {

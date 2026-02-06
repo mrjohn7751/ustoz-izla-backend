@@ -91,14 +91,14 @@ class User extends Authenticatable
         return $query->where('role', $role);
     }
 
-    public function scopeTeachers($query)
+    public function scopeUstozlar($query)
     {
-        return $query->where('role', 'teacher');
+        return $query->where('role', 'ustoz');
     }
 
-    public function scopeStudents($query)
+    public function scopeFanlar($query)
     {
-        return $query->where('role', 'student');
+        return $query->where('role', 'fan');
     }
 
     public function scopeAdmins($query)
@@ -114,14 +114,14 @@ class User extends Authenticatable
         return $this->role === 'admin';
     }
 
-    public function isTeacher()
+    public function isUstoz()
     {
-        return $this->role === 'teacher';
+        return $this->role === 'ustoz';
     }
 
-    public function isStudent()
+    public function isFan()
     {
-        return $this->role === 'student';
+        return $this->role === 'fan';
     }
 
     /**

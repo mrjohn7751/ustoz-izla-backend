@@ -17,7 +17,7 @@ class CommentController extends Controller
         $validator = Validator::make($request->all(), [
             'commentable_type' => 'required|in:App\Models\Elon,App\Models\Video',
             'commentable_id' => 'required|integer',
-            'content' => 'required|string|max:500',
+            'comment' => 'required|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -33,7 +33,7 @@ class CommentController extends Controller
                 'user_id' => $request->user()->id,
                 'commentable_type' => $request->commentable_type,
                 'commentable_id' => $request->commentable_id,
-                'content' => $request->content,
+                'comment' => $request->comment,
             ]);
 
             // Update comment count on commentable
@@ -80,7 +80,7 @@ class CommentController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'content' => 'required|string|max:500',
+            'comment' => 'required|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -93,7 +93,7 @@ class CommentController extends Controller
 
         try {
             $comment->update([
-                'content' => $request->content,
+                'comment' => $request->comment,
             ]);
 
             return response()->json([

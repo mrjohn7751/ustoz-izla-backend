@@ -14,8 +14,9 @@ class FavoriteController extends Controller
      */
     public function index(Request $request)
     {
-        $favorites = Favorite::with(['elon.ustoz.user'])
+        $favorites = Favorite::with(['favoritable.ustoz', 'favoritable.fan'])
             ->where('user_id', $request->user()->id)
+            ->where('favoritable_type', Elon::class)
             ->latest()
             ->paginate(20);
 
@@ -39,11 +40,28 @@ class FavoriteController extends Controller
             ], 404);
         }
 
+        // Tekshirish - allaqachon qo'shilganmi
+        $existing = Favorite::where('user_id', $request->user()->id)
+            ->where('favoritable_type', Elon::class)
+            ->where('favoritable_id', $elonId)
+            ->first();
+
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Already in favorites'
+            ], 409);
+        }
+
         try {
-            $favorite = Favorite::firstOrCreate([
+            $favorite = Favorite::create([
                 'user_id' => $request->user()->id,
-                'elon_id' => $elonId,
+                'favoritable_type' => Elon::class,
+                'favoritable_id' => $elonId,
             ]);
+
+            // E'lonning favorites_count ni oshirish
+            $elon->increment('favorites_count');
 
             return response()->json([
                 'success' => true,
@@ -53,8 +71,9 @@ class FavoriteController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Already in favorites'
-            ], 409);
+                'message' => 'Failed to add to favorites',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -64,7 +83,8 @@ class FavoriteController extends Controller
     public function destroy(Request $request, $elonId)
     {
         $favorite = Favorite::where('user_id', $request->user()->id)
-            ->where('elon_id', $elonId)
+            ->where('favoritable_type', Elon::class)
+            ->where('favoritable_id', $elonId)
             ->first();
 
         if (!$favorite) {
@@ -75,6 +95,12 @@ class FavoriteController extends Controller
         }
 
         $favorite->delete();
+
+        // E'lonning favorites_count ni kamaytirish
+        $elon = Elon::find($elonId);
+        if ($elon && $elon->favorites_count > 0) {
+            $elon->decrement('favorites_count');
+        }
 
         return response()->json([
             'success' => true,
@@ -88,7 +114,8 @@ class FavoriteController extends Controller
     public function check(Request $request, $elonId)
     {
         $isFavorited = Favorite::where('user_id', $request->user()->id)
-            ->where('elon_id', $elonId)
+            ->where('favoritable_type', Elon::class)
+            ->where('favoritable_id', $elonId)
             ->exists();
 
         return response()->json([

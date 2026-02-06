@@ -11,9 +11,12 @@ use App\Http\Controllers\API\SearchController;
 
 Route::prefix('v1')->group(function () {
 
-    // PUBLIC ROUTES
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);
+    // PUBLIC ROUTES with rate limiting
+    Route::middleware('throttle:10,1')->group(function () {
+        // Auth routes - 10 requests per minute
+        Route::post('/auth/register', [AuthController::class, 'register']);
+        Route::post('/auth/login', [AuthController::class, 'login']);
+    });
 
     // Public elonlar
     Route::get('/elonlar', [ElonController::class, 'index']);
@@ -26,8 +29,12 @@ Route::prefix('v1')->group(function () {
     // PUBLIC VIDEO ROUTES
     Route::get('/videos', [VideoController::class, 'index']);
     Route::get('/videos/{id}', [VideoController::class, 'show']);
-    Route::post('/videos/{id}/views', [VideoController::class, 'incrementViews']);
-    Route::post('/videos/{id}/like', [VideoController::class, 'likeVideo']);
+
+    // Rate limited actions to prevent spam
+    Route::middleware('throttle:30,1')->group(function () {
+        Route::post('/videos/{id}/views', [VideoController::class, 'incrementViews']);
+        Route::post('/videos/{id}/like', [VideoController::class, 'likeVideo']);
+    });
 
     // Search
     Route::get('/search', [SearchController::class, 'search']);

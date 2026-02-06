@@ -163,6 +163,7 @@ class UserManagementController extends Controller
 
     /**
      * Change user role
+     * Security: Admin role changes are restricted
      */
     public function changeRole(Request $request, $id)
     {
@@ -185,6 +186,22 @@ class UserManagementController extends Controller
                 'success' => false,
                 'message' => 'User not found'
             ], 404);
+        }
+
+        // Security: Prevent changing admin's role
+        if ($user->role === 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot change admin user role'
+            ], 403);
+        }
+
+        // Security: Prevent promoting to admin (only super admin should do this)
+        if ($request->role === 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot promote user to admin role via this endpoint'
+            ], 403);
         }
 
         $user->role = $request->role;

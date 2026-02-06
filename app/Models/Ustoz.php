@@ -69,4 +69,30 @@ class Ustoz extends Model
     {
         return $this->is_verified;
     }
+
+    // Scopes
+    public function scopeByLocation($query, $location)
+    {
+        return $query->where('joylashuv', 'like', "%{$location}%");
+    }
+
+    public function scopeByExperience($query, $minYears)
+    {
+        return $query->where('tajriba', '>=', $minYears);
+    }
+
+    public function scopeVerified($query)
+    {
+        return $query->where('is_verified', true);
+    }
+
+    public function scopeTop($query)
+    {
+        return $query->where('rating', '>=', 4.0);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
 }

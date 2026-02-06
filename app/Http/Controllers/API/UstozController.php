@@ -38,13 +38,13 @@ class UstozController extends Controller
         $sortBy = $request->get('sort_by', 'latest');
         switch ($sortBy) {
             case 'rating':
-                $query->orderBy('average_rating', 'desc');
+                $query->orderBy('rating', 'desc');
                 break;
             case 'experience':
-                $query->orderBy('experience_years', 'desc');
+                $query->orderBy('tajriba', 'desc');
                 break;
             case 'students':
-                $query->orderBy('students_count', 'desc');
+                $query->orderBy('oquvchilar_soni', 'desc');
                 break;
             default:
                 $query->latest();
@@ -88,14 +88,13 @@ class UstozController extends Controller
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'full_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'telegram' => 'nullable|string|max:100',
+            'ism' => 'required|string|max:255',
+            'familiya' => 'required|string|max:255',
+            'telefon' => 'required|string|max:20',
             'bio' => 'nullable|string',
-            'education' => 'nullable|string',
-            'experience_years' => 'required|integer|min:0',
-            'location' => 'required|string|max:255',
-            'center_name' => 'nullable|string|max:255',
+            'tajriba' => 'required|integer|min:0',
+            'joylashuv' => 'required|string|max:255',
+            'fanlar' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
@@ -124,14 +123,19 @@ class UstozController extends Controller
             // Create ustoz profile
             $ustoz = Ustoz::create([
                 'user_id' => $user->id,
-                'full_name' => $request->full_name,
-                'phone' => $request->phone,
-                'telegram' => $request->telegram,
+                'ism' => $request->ism,
+                'familiya' => $request->familiya,
+                'telefon' => $request->telefon,
                 'bio' => $request->bio,
-                'education' => $request->education,
-                'experience_years' => $request->experience_years,
-                'location' => $request->location,
-                'center_name' => $request->center_name,
+                'tajriba' => $request->tajriba,
+                'joylashuv' => $request->joylashuv,
+                'fanlar' => $request->fanlar ?? [],
+                'rating' => 0,
+                'rating_count' => 0,
+                'oquvchilar_soni' => 0,
+                'sertifikatlar_soni' => 0,
+                'is_verified' => false,
+                'status' => 'active',
             ]);
 
             return response()->json([
@@ -164,14 +168,14 @@ class UstozController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'full_name' => 'sometimes|string|max:255',
-            'phone' => 'sometimes|string|max:20',
-            'telegram' => 'nullable|string|max:100',
+            'ism' => 'sometimes|string|max:255',
+            'familiya' => 'sometimes|string|max:255',
+            'telefon' => 'sometimes|string|max:20',
             'bio' => 'nullable|string',
-            'education' => 'nullable|string',
-            'experience_years' => 'sometimes|integer|min:0',
-            'location' => 'sometimes|string|max:255',
-            'center_name' => 'nullable|string|max:255',
+            'tajriba' => 'sometimes|integer|min:0',
+            'joylashuv' => 'sometimes|string|max:255',
+            'fanlar' => 'nullable|array',
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -183,7 +187,19 @@ class UstozController extends Controller
         }
 
         try {
-            $ustoz->update($request->all());
+            // Faqat fillable maydonlarni yangilash
+            $updateData = $request->only([
+                'ism', 'familiya', 'telefon', 'bio',
+                'tajriba', 'joylashuv', 'fanlar'
+            ]);
+
+            // Avatar yuklash
+            if ($request->hasFile('avatar')) {
+                $avatarPath = $request->file('avatar')->store('avatars', 'public');
+                $updateData['avatar'] = $avatarPath;
+            }
+
+            $ustoz->update($updateData);
 
             return response()->json([
                 'success' => true,
@@ -227,7 +243,7 @@ class UstozController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'rating' => 'required|integer|min:1|max:5',
-            'review' => 'nullable|string|max:500',
+            'comment' => 'nullable|string|max:500',
         ]);
 
         if ($validator->fails()) {
@@ -251,9 +267,12 @@ class UstozController extends Controller
                 ['user_id' => $request->user()->id],
                 [
                     'rating' => $request->rating,
-                    'review' => $request->review,
+                    'comment' => $request->comment,
                 ]
             );
+
+            // Ustoz reytingini yangilash
+            $this->updateUstozRating($ustoz);
 
             return response()->json([
                 'success' => true,
@@ -266,6 +285,21 @@ class UstozController extends Controller
                 'message' => 'Failed to submit rating',
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Ustoz reytingini hisoblash va yangilash
+     */
+    private function updateUstozRating(Ustoz $ustoz)
+    {
+        $ratings = $ustoz->ratings;
+        if ($ratings->count() > 0) {
+            $averageRating = $ratings->avg('rating');
+            $ustoz->update([
+                'rating' => round($averageRating, 2),
+                'rating_count' => $ratings->count(),
+            ]);
         }
     }
 

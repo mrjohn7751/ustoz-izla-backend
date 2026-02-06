@@ -26,4 +26,14 @@ class Favorite extends Model
     {
         return $this->morphTo();
     }
+
+    /**
+     * Get elon (backward compatibility)
+     * Faqat Elon tipidagi favoritalar uchun
+     */
+    public function elon()
+    {
+        return $this->belongsTo(Elon::class, 'favoritable_id')
+            ->where('favoritable_type', Elon::class);
+    }
 }
