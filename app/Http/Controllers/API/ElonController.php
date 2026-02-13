@@ -16,8 +16,14 @@ class ElonController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Elon::with(['ustoz', 'fan'])
-            ->where('status', 'approved')
             ->latest();
+
+        // Admin can filter by status, public sees only approved
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        } else {
+            $query->where('status', 'approved');
+        }
 
         // Filtering
         if ($request->has('fan_id')) {
@@ -83,7 +89,9 @@ class ElonController extends Controller
             'tavsif' => 'required|string',
             'narx' => 'required|numeric|min:0',
             'joylashuv' => 'required|string',
+            'dars_kunlari' => 'required|array',
             'dars_vaqti' => 'required|string',
+            'markaz_nomi' => 'nullable|string|max:255',
             'rasm' => 'nullable|image|max:2048',
         ]);
 
@@ -136,12 +144,16 @@ class ElonController extends Controller
     {
         $elon = Elon::findOrFail($id);
 
-        // Check ownership
-        if ($elon->ustoz_id !== auth()->user()->ustoz->id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ruxsat yo\'q'
-            ], 403);
+        // Admin can update any elon, ustoz can only update own
+        $user = auth()->user();
+        if ($user->role !== 'admin') {
+            $ustoz = $user->ustoz;
+            if (!$ustoz || $elon->ustoz_id !== $ustoz->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ruxsat yo\'q'
+                ], 403);
+            }
         }
 
         $validated = $request->validate([
@@ -151,6 +163,7 @@ class ElonController extends Controller
             'narx' => 'sometimes|numeric|min:0',
             'joylashuv' => 'sometimes|string',
             'dars_vaqti' => 'sometimes|string',
+            'status' => 'sometimes|in:pending,approved,rejected',
             'rasm' => 'nullable|image|max:2048',
         ]);
 
