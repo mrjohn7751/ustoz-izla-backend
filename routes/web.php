@@ -13,6 +13,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Privacy Policy
+Route::get('/privacy-policy', function () {
+    return view('privacy-policy');
+});
+
+// Account Deletion
+Route::get('/delete-account', function () {
+    return view('delete-account');
+});
+
 // Login route (API uchun redirect)
 Route::get('/login', function () {
     return response()->json([

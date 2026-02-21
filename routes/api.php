@@ -44,6 +44,7 @@ Route::prefix('v1')->group(function () {
         // Auth
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::delete('/auth/delete-account', [AuthController::class, 'deleteAccount']);
 
         // Elonlar CRUD
         Route::post('/elonlar', [ElonController::class, 'store']);

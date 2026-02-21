@@ -204,6 +204,77 @@ class AuthController extends Controller
     }
 
     /**
+     * Delete user account and all associated data
+     */
+    public function deleteAccount(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Parolni kiriting',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Parol noto\'g\'ri'
+            ], 401);
+        }
+
+        if ($user->role === 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin hisobini o\'chirib bo\'lmaydi'
+            ], 403);
+        }
+
+        try {
+            // Delete related data
+            if ($user->role === 'ustoz' && $user->ustoz) {
+                // Delete ustoz's elonlar (soft delete)
+                $user->ustoz->elonlar()->delete();
+                // Delete ustoz's videos (soft delete)
+                $user->ustoz->videos()->delete();
+                // Delete ustoz ratings
+                $user->ustoz->ratings()->delete();
+                // Delete ustoz profile
+                $user->ustoz->delete();
+            }
+
+            // Delete user's comments (soft delete)
+            $user->comments()->delete();
+            // Delete user's favorites
+            $user->favorites()->delete();
+            // Delete user's ratings
+            $user->ratings()->delete();
+            // Delete user's notifications
+            $user->notifications()->delete();
+            // Delete all access tokens
+            $user->tokens()->delete();
+            // Delete user
+            $user->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Hisobingiz muvaffaqiyatli o\'chirildi'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hisobni o\'chirishda xatolik yuz berdi'
+            ], 500);
+        }
+    }
+
+    /**
      * Change password
      */
     public function changePassword(Request $request)
