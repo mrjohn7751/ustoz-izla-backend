@@ -83,8 +83,17 @@ class ElonController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        $ustoz = auth()->user()->ustoz;
+
+        if (!$ustoz) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Siz ustoz sifatida ro\'yxatdan o\'tmagansiz. Avval ustoz profilini yarating.',
+            ], 403);
+        }
+
         $validated = $request->validate([
-            'fan_id' => 'required|exists:fanlar,id',
+            'fan_id' => 'required',
             'sarlavha' => 'required|string|max:255',
             'tavsif' => 'required|string',
             'narx' => 'required|numeric|min:0',
@@ -95,7 +104,21 @@ class ElonController extends Controller
             'rasm' => 'nullable|image|max:2048',
         ]);
 
-        $validated['ustoz_id'] = auth()->user()->ustoz->id;
+        // fan_id — raqam yoki fan nomi bo'lishi mumkin
+        $fanId = $validated['fan_id'];
+        if (!is_numeric($fanId)) {
+            $fan = \App\Models\Fan::where('nomi', $fanId)->first();
+            if (!$fan) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Fan topilmadi: ' . $fanId,
+                ], 422);
+            }
+            $fanId = $fan->id;
+        }
+        $validated['fan_id'] = $fanId;
+
+        $validated['ustoz_id'] = $ustoz->id;
         $validated['status'] = 'pending'; // Admin approval required
 
         if ($request->hasFile('rasm')) {
@@ -188,8 +211,8 @@ class ElonController extends Controller
     {
         $elon = Elon::findOrFail($id);
 
-        // Check ownership
-        if ($elon->ustoz_id !== auth()->user()->ustoz->id) {
+        $ustoz = auth()->user()->ustoz;
+        if (!$ustoz || $elon->ustoz_id !== $ustoz->id) {
             return response()->json([
                 'success' => false,
                 'message' => 'Ruxsat yo\'q'

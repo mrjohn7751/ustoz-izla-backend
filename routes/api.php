@@ -22,6 +22,20 @@ Route::prefix('v1')->group(function () {
     Route::get('/elonlar', [ElonController::class, 'index']);
     Route::get('/elonlar/{id}', [ElonController::class, 'show']);
 
+    // Public elon comments
+    Route::get('/elonlar/{id}/comments', function ($id) {
+        $comments = \App\Models\Comment::with('user')
+            ->where('commentable_type', \App\Models\Elon::class)
+            ->where('commentable_id', $id)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $comments,
+        ]);
+    });
+
     // Public ustozlar
     Route::get('/ustozlar', [UstozController::class, 'index']);
     Route::get('/ustozlar/{id}', [UstozController::class, 'show']);
@@ -58,6 +72,12 @@ Route::prefix('v1')->group(function () {
         Route::delete('/videos/{id}', [VideoController::class, 'destroy']);
         Route::get('/my-videos', [VideoController::class, 'myVideos']);
 
+        // Ustoz registration
+        Route::post('/ustoz/register', [UstozController::class, 'register']);
+        Route::get('/ustoz/profile', [UstozController::class, 'myProfile']);
+        Route::put('/ustoz/profile', [UstozController::class, 'updateProfile']);
+        Route::post('/ustoz/{id}/rate', [UstozController::class, 'rate']);
+
         // Comments
         Route::post('/comments', [CommentController::class, 'store']);
         Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
@@ -66,5 +86,8 @@ Route::prefix('v1')->group(function () {
         Route::get('/favorites', [FavoriteController::class, 'index']);
         Route::post('/favorites/{elonId}', [FavoriteController::class, 'store']);
         Route::delete('/favorites/{elonId}', [FavoriteController::class, 'destroy']);
+
+        // Admin: Ustoz statusini o'zgartirish (tasdiqlash/rad etish)
+        Route::put('/ustozlar/{id}', [UstozController::class, 'updateStatus']);
     });
 });

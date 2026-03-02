@@ -54,14 +54,6 @@ class AuthController extends Controller
                 'role' => $request->role,
             ]);
 
-            // Create related profile based on role
-            if ($request->role === 'fan') {
-                Fan::create([
-                    'user_id' => $user->id,
-                    'phone' => $request->phone,
-                ]);
-            }
-
             $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([

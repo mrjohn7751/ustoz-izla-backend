@@ -94,7 +94,8 @@ class UstozController extends Controller
             'bio' => 'nullable|string',
             'tajriba' => 'required|integer|min:0',
             'joylashuv' => 'required|string|max:255',
-            'fanlar' => 'nullable|array',
+            'fanlar' => 'nullable',
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -120,6 +121,12 @@ class UstozController extends Controller
             $user->role = 'ustoz';
             $user->save();
 
+            // Fanlar ni array ga aylantirish
+            $fanlar = $request->fanlar ?? [];
+            if (is_string($fanlar)) {
+                $fanlar = json_decode($fanlar, true) ?? [$fanlar];
+            }
+
             // Create ustoz profile
             $ustoz = Ustoz::create([
                 'user_id' => $user->id,
@@ -129,14 +136,20 @@ class UstozController extends Controller
                 'bio' => $request->bio,
                 'tajriba' => $request->tajriba,
                 'joylashuv' => $request->joylashuv,
-                'fanlar' => $request->fanlar ?? [],
+                'fanlar' => $fanlar,
                 'rating' => 0,
                 'rating_count' => 0,
                 'oquvchilar_soni' => 0,
                 'sertifikatlar_soni' => 0,
                 'is_verified' => false,
-                'status' => 'active',
+                'status' => 'pending',
             ]);
+
+            // Avatar yuklash
+            if ($request->hasFile('avatar')) {
+                $avatarPath = $request->file('avatar')->store('avatars', 'public');
+                $ustoz->update(['avatar' => $avatarPath]);
+            }
 
             return response()->json([
                 'success' => true,
@@ -309,5 +322,67 @@ class UstozController extends Controller
     public function updateRating(Request $request, $ustozId)
     {
         return $this->rate($request, $ustozId);
+    }
+
+    /**
+     * Admin: Update ustoz status (approve/reject)
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        // Admin tekshiruvi
+        if ($request->user()->role !== 'admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Faqat admin bu amalni bajara oladi'
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'status' => 'required|in:active,rejected,pending',
+            'is_verified' => 'sometimes|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $ustoz = Ustoz::find($id);
+
+            if (!$ustoz) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ustoz not found'
+                ], 404);
+            }
+
+            $updateData = ['status' => $request->status];
+
+            // active bo'lsa is_verified ham true
+            if ($request->status === 'active') {
+                $updateData['is_verified'] = true;
+            }
+
+            if ($request->has('is_verified')) {
+                $updateData['is_verified'] = $request->is_verified;
+            }
+
+            $ustoz->update($updateData);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ustoz status updated successfully',
+                'data' => $ustoz
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update ustoz status'
+            ], 500);
+        }
     }
 }

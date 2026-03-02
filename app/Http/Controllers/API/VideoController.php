@@ -112,10 +112,23 @@ class VideoController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'description' => 'required|string',
-                'subject' => 'required|integer',
+                'subject' => 'required',
                 'video' => 'required|file|max:204800',
                 'thumbnail' => 'nullable|image|max:5120',
             ]);
+
+            // Subject — fan_id yoki fan nomi bo'lishi mumkin
+            $fanId = $validated['subject'];
+            if (!is_numeric($fanId)) {
+                $fan = \App\Models\Fan::where('nomi', $fanId)->first();
+                if (!$fan) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Fan topilmadi: ' . $fanId,
+                    ], 422);
+                }
+                $fanId = $fan->id;
+            }
 
             $user = Auth::user();
 
@@ -141,7 +154,7 @@ class VideoController extends Controller
 
             $video = Video::create([
                 'ustoz_id' => $user->ustoz->id,
-                'fan_id' => $validated['subject'],
+                'fan_id' => $fanId,
                 'sarlavha' => $validated['title'],
                 'tavsif' => $validated['description'],
                 'video_url' => $videoPath,
@@ -164,6 +177,11 @@ class VideoController extends Controller
                 ],
             ], 201);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             Log::error('VIDEO STORE ERROR', [
                 'message' => $e->getMessage(),
