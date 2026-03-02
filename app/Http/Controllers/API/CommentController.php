@@ -36,10 +36,14 @@ class CommentController extends Controller
                 'comment' => $request->comment,
             ]);
 
-            // Update comment count on commentable
-            $commentable = $comment->commentable;
-            if ($commentable) {
-                $commentable->increment('comments_count');
+            // Update comment count on commentable (non-fatal)
+            try {
+                $commentable = $comment->commentable;
+                if ($commentable) {
+                    $commentable->increment('comments_count');
+                }
+            } catch (\Exception $e) {
+                // comments_count ustuni yo'q bo'lsa, xatolikni e'tiborsiz qoldirish
             }
 
             $comment->load('user');
