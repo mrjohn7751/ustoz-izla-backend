@@ -178,8 +178,11 @@ class VideoSeeder extends Seeder
 
         // Insert videos
         foreach ($videos as $videoData) {
-            Video::create($videoData);
-            $this->command->info('  ✅ Video yaratildi: ' . $videoData['sarlavha']);
+            Video::firstOrCreate(
+                ['sarlavha' => $videoData['sarlavha'], 'ustoz_id' => $videoData['ustoz_id']],
+                $videoData
+            );
+            $this->command->info('  ✅ Video tayyor: ' . $videoData['sarlavha']);
         }
 
         $this->command->info('');

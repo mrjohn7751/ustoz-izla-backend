@@ -78,7 +78,10 @@ class FanSeeder extends Seeder
         ];
 
         foreach ($fanlar as $fan) {
-            Fan::create($fan);
+            Fan::firstOrCreate(
+                ['nomi' => $fan['nomi']],
+                $fan
+            );
         }
     }
 }

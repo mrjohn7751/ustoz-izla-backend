@@ -109,7 +109,10 @@ class ElonSeeder extends Seeder
         ];
 
         foreach ($elonlar as $elon) {
-            Elon::create($elon);
+            Elon::firstOrCreate(
+                ['sarlavha' => $elon['sarlavha'], 'ustoz_id' => $elon['ustoz_id']],
+                $elon
+            );
         }
 
         $this->command->info('✅ ' . count($elonlar) . ' ta e\'lon yaratildi');
