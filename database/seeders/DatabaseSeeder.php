@@ -14,38 +14,44 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // ===== ADMIN USER =====
-        $admin = User::create([
-            'name' => 'Admin',
-            'email' => 'admin@ustoz.uz',
-            'phone' => '+998901234567',
-            'password' => Hash::make('admin123'),
-            'role' => 'admin',
-            'is_active' => true,
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@ustoz.uz'],
+            [
+                'name' => 'Admin',
+                'phone' => '+998901234567',
+                'password' => Hash::make('admin123'),
+                'role' => 'admin',
+                'is_active' => true,
+            ]
+        );
 
-        $this->command->info('✅ Admin yaratildi: admin@ustoz.uz / admin123');
+        $this->command->info('✅ Admin tayyor: admin@ustoz.uz / admin123');
 
         // ===== TEST O'QUVCHI (FAN) =====
-        $testFan = User::create([
-            'name' => 'Test O\'quvchi',
-            'email' => 'user@ustoz.uz',
-            'phone' => '+998901234568',
-            'password' => Hash::make('password123'),
-            'role' => 'fan',
-            'is_active' => true,
-        ]);
+        $testFan = User::firstOrCreate(
+            ['email' => 'user@ustoz.uz'],
+            [
+                'name' => 'Test O\'quvchi',
+                'phone' => '+998901234568',
+                'password' => Hash::make('password123'),
+                'role' => 'fan',
+                'is_active' => true,
+            ]
+        );
 
-        $this->command->info('✅ Test o\'quvchi yaratildi: user@ustoz.uz / password123');
+        $this->command->info('✅ Test o\'quvchi tayyor: user@ustoz.uz / password123');
 
         // ===== TEST O'QITUVCHI (USTOZ) =====
-        $testUstoz = User::create([
-            'name' => 'Test Ustoz',
-            'email' => 'ustoz@ustoz.uz',
-            'phone' => '+998901234569',
-            'password' => Hash::make('password123'),
-            'role' => 'ustoz',
-            'is_active' => true,
-        ]);
+        $testUstoz = User::firstOrCreate(
+            ['email' => 'ustoz@ustoz.uz'],
+            [
+                'name' => 'Test Ustoz',
+                'phone' => '+998901234569',
+                'password' => Hash::make('password123'),
+                'role' => 'ustoz',
+                'is_active' => true,
+            ]
+        );
 
         $this->command->info('✅ Test ustoz yaratildi: ustoz@ustoz.uz / password123');
 
