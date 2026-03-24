@@ -8,6 +8,7 @@ use App\Http\Controllers\API\VideoController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\FavoriteController;
 use App\Http\Controllers\API\SearchController;
+use App\Http\Controllers\API\ChatApiController;
 
 Route::prefix('v1')->group(function () {
 
@@ -58,6 +59,8 @@ Route::prefix('v1')->group(function () {
         // Auth
         Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
+        Route::post('/auth/change-password', [AuthController::class, 'changePassword']);
         Route::delete('/auth/delete-account', [AuthController::class, 'deleteAccount']);
 
         // Elonlar CRUD
@@ -86,6 +89,15 @@ Route::prefix('v1')->group(function () {
         Route::get('/favorites', [FavoriteController::class, 'index']);
         Route::post('/favorites/{elonId}', [FavoriteController::class, 'store']);
         Route::delete('/favorites/{elonId}', [FavoriteController::class, 'destroy']);
+
+        // Chat
+        Route::get('/chats', [ChatApiController::class, 'index']);
+        Route::post('/chats', [ChatApiController::class, 'store']);
+        Route::get('/chats/{id}', [ChatApiController::class, 'show']);
+        Route::get('/chats/{id}/messages', [ChatApiController::class, 'messages']);
+        Route::post('/chats/{id}/send-message', [ChatApiController::class, 'sendMessage']);
+        Route::post('/chats/{id}/mark-as-read', [ChatApiController::class, 'markAsRead']);
+        Route::delete('/chats/{id}', [ChatApiController::class, 'destroy']);
 
         // Admin: Ustoz statusini o'zgartirish (tasdiqlash/rad etish)
         Route::put('/ustozlar/{id}', [UstozController::class, 'updateStatus']);
