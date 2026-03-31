@@ -51,6 +51,14 @@ Route::prefix('v1')->group(function () {
         Route::post('/videos/{id}/like', [VideoController::class, 'likeVideo']);
     });
 
+    // Public fanlar
+    Route::get('/fanlar', function () {
+        return response()->json([
+            'success' => true,
+            'data' => \App\Models\Fan::where('is_active', true)->orderBy('order')->get(),
+        ]);
+    });
+
     // Search
     Route::get('/search', [SearchController::class, 'search']);
 

@@ -11,6 +11,7 @@ nginx.conf
 /.nova
 /.phpunit.cache
 /.vscode
+/.ng
 /.zed
 /auth.json
 /node_modules

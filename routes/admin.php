@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ElonManagementController;
 use App\Http\Controllers\Admin\VideoManagementController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\FanManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +44,14 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
         Route::post('/bulk-action', [VideoManagementController::class, 'bulkAction']);
     });
     
+    // Fan (Subject) Management
+    Route::prefix('fanlar')->group(function () {
+        Route::get('/', [FanManagementController::class, 'index']);
+        Route::post('/', [FanManagementController::class, 'store']);
+        Route::put('/{id}', [FanManagementController::class, 'update']);
+        Route::delete('/{id}', [FanManagementController::class, 'destroy']);
+    });
+
     // User Management
     Route::prefix('users')->group(function () {
         Route::get('/', [UserManagementController::class, 'index']);
