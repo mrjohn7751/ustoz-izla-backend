@@ -25,6 +25,39 @@ class ElonController extends Controller
             $query->where('status', 'approved');
         }
 
+        // Badge filter
+        if ($request->has('badge')) {
+            $badgeMap = [
+                'new' => 'Yangi',
+                'top' => 'Top Ustoz',
+                'discount' => 'Chegirma',
+                'tavsiya' => 'Tavsiya',
+            ];
+            $badgeValue = $badgeMap[$request->badge] ?? $request->badge;
+            $query->where('badge', $badgeValue);
+        }
+
+        // Sort
+        if ($request->has('sort')) {
+            switch ($request->sort) {
+                case 'popular':
+                    $query->reorder()->orderByDesc('views_count');
+                    break;
+                case 'price_low':
+                    $query->reorder()->orderBy('narx');
+                    break;
+                case 'price_high':
+                    $query->reorder()->orderByDesc('narx');
+                    break;
+                case 'most_favorited':
+                    $query->reorder()->orderByDesc('favorites_count');
+                    break;
+                default:
+                    // 'latest' — already ordered by latest
+                    break;
+            }
+        }
+
         // Filtering
         if ($request->has('fan_id')) {
             $query->where('fan_id', $request->fan_id);
