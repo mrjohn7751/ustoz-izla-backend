@@ -141,8 +141,8 @@ class UstozController extends Controller
                 'rating_count' => 0,
                 'oquvchilar_soni' => 0,
                 'sertifikatlar_soni' => 0,
-                'is_verified' => false,
-                'status' => 'pending',
+                'is_verified' => true,   // Avtomatik tasdiqlangan
+                'status' => 'active',    // Admin tasdiqlashi shart emas
             ]);
 
             // Avatar yuklash

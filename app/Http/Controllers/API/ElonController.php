@@ -116,13 +116,33 @@ class ElonController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $ustoz = auth()->user()->ustoz;
+        $user = auth()->user();
+        $ustoz = $user->ustoz;
 
         if (!$ustoz) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Siz ustoz sifatida ro\'yxatdan o\'tmagansiz. Avval ustoz profilini yarating.',
-            ], 403);
+            if ($user->role === 'ustoz') {
+                // Vebsaytdan profil yaratmasdan kelgan ustoz uchun avtomatik bazaviy profil yaratamiz
+                $names = explode(' ', $user->name, 2);
+                $ustoz = \App\Models\Ustoz::create([
+                    'user_id' => $user->id,
+                    'ism' => $names[0] ?? $user->name,
+                    'familiya' => $names[1] ?? '',
+                    'telefon' => $user->phone,
+                    'tajriba' => 0,
+                    'joylashuv' => 'Belgilanmagan',
+                    'rating' => 0,
+                    'rating_count' => 0,
+                    'oquvchilar_soni' => 0,
+                    'sertifikatlar_soni' => 0,
+                    'is_verified' => true,
+                    'status' => 'active',
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Siz ustoz sifatida ro\'yxatdan o\'tmagansiz. Avval ustoz profilini yarating.',
+                ], 403);
+            }
         }
 
         $validated = $request->validate([

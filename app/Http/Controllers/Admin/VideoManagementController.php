@@ -36,9 +36,8 @@ class VideoManagementController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('title', 'LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%")
-                  ->orWhere('subject', 'LIKE', "%{$search}%");
+                $q->where('sarlavha', 'LIKE', "%{$search}%")
+                  ->orWhere('tavsif', 'LIKE', "%{$search}%");
             });
         }
 
@@ -86,14 +85,16 @@ class VideoManagementController extends Controller
 
         try {
             $adminNote = $request->input('admin_note', 'Video tasdiqlandi');
-            $video->approve($adminNote);
+            $video->status = 'approved';
+            $video->rad_sababi = null;
+            $video->save();
 
             // Send notification to ustoz
             Notification::create([
                 'user_id' => $video->ustoz->user_id,
                 'type' => 'video_approved',
                 'title' => 'Video tasdiqlandi',
-                'message' => "Sizning '{$video->title}' videongiz admin tomonidan tasdiqlandi.",
+                'message' => "Sizning '{$video->sarlavha}' videongiz admin tomonidan tasdiqlandi.",
                 'data' => [
                     'video_id' => $video->id,
                 ],
@@ -140,14 +141,16 @@ class VideoManagementController extends Controller
         }
 
         try {
-            $video->reject($request->admin_note);
+            $video->status = 'rejected';
+            $video->rad_sababi = $request->admin_note;
+            $video->save();
 
             // Send notification to ustoz
             Notification::create([
                 'user_id' => $video->ustoz->user_id,
                 'type' => 'video_rejected',
                 'title' => 'Video rad etildi',
-                'message' => "Sizning '{$video->title}' videongiz rad etildi. Sabab: {$request->admin_note}",
+                'message' => "Sizning '{$video->sarlavha}' videongiz rad etildi. Sabab: {$request->admin_note}",
                 'data' => [
                     'video_id' => $video->id,
                     'reason' => $request->admin_note,
@@ -228,14 +231,16 @@ class VideoManagementController extends Controller
             $videos = Video::whereIn('id', $request->video_ids)->get();
 
             foreach ($videos as $video) {
-                $video->approve('Bulk approved');
+                $video->status = 'approved';
+                $video->rad_sababi = null;
+                $video->save();
 
                 // Send notification
                 Notification::create([
                     'user_id' => $video->ustoz->user_id,
                     'type' => 'video_approved',
                     'title' => 'Video tasdiqlandi',
-                    'message' => "Sizning '{$video->title}' videongiz admin tomonidan tasdiqlandi.",
+                    'message' => "Sizning '{$video->sarlavha}' videongiz admin tomonidan tasdiqlandi.",
                     'data' => ['video_id' => $video->id],
                 ]);
             }

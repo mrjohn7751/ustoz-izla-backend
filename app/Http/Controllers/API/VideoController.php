@@ -131,13 +131,33 @@ class VideoController extends Controller
             }
 
             $user = Auth::user();
+            $ustoz = $user->ustoz;
 
             // Ustoz profilini tekshirish
-            if (!$user->ustoz) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Siz ustoz sifatida ro\'yxatdan o\'tmagansiz',
-                ], 403);
+            if (!$ustoz) {
+                if ($user->role === 'ustoz') {
+                    $names = explode(' ', $user->name, 2);
+                    $ustoz = \App\Models\Ustoz::create([
+                        'user_id' => $user->id,
+                        'ism' => $names[0] ?? $user->name,
+                        'familiya' => $names[1] ?? '',
+                        'telefon' => $user->phone,
+                        'tajriba' => 0,
+                        'joylashuv' => 'Belgilanmagan',
+                        'rating' => 0,
+                        'rating_count' => 0,
+                        'oquvchilar_soni' => 0,
+                        'sertifikatlar_soni' => 0,
+                        'is_verified' => true,
+                        'status' => 'active',
+                    ]);
+                    $user->load('ustoz');
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Siz ustoz sifatida ro\'yxatdan o\'tmagansiz',
+                    ], 403);
+                }
             }
 
             $videoPath = null;

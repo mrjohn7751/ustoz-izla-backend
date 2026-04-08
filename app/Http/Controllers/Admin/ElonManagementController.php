@@ -36,9 +36,8 @@ class ElonManagementController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('title', 'LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%")
-                  ->orWhere('subject', 'LIKE', "%{$search}%");
+                $q->where('sarlavha', 'LIKE', "%{$search}%")
+                  ->orWhere('tavsif', 'LIKE', "%{$search}%");
             });
         }
 
@@ -86,14 +85,16 @@ class ElonManagementController extends Controller
 
         try {
             $adminNote = $request->input('admin_note', 'E\'lon tasdiqlandi');
-            $elon->approve($adminNote);
+            $elon->status = 'approved';
+            $elon->rad_sababi = null;
+            $elon->save();
 
             // Send notification to ustoz
             Notification::create([
                 'user_id' => $elon->ustoz->user_id,
                 'type' => 'elon_approved',
                 'title' => 'E\'lon tasdiqlandi',
-                'message' => "Sizning '{$elon->title}' e\'loningiz admin tomonidan tasdiqlandi.",
+                'message' => "Sizning '{$elon->sarlavha}' e\'loningiz admin tomonidan tasdiqlandi.",
                 'data' => [
                     'elon_id' => $elon->id,
                 ],
@@ -140,14 +141,16 @@ class ElonManagementController extends Controller
         }
 
         try {
-            $elon->reject($request->admin_note);
+            $elon->status = 'rejected';
+            $elon->rad_sababi = $request->admin_note;
+            $elon->save();
 
             // Send notification to ustoz
             Notification::create([
                 'user_id' => $elon->ustoz->user_id,
                 'type' => 'elon_rejected',
                 'title' => 'E\'lon rad etildi',
-                'message' => "Sizning '{$elon->title}' e\'loningiz rad etildi. Sabab: {$request->admin_note}",
+                'message' => "Sizning '{$elon->sarlavha}' e\'loningiz rad etildi. Sabab: {$request->admin_note}",
                 'data' => [
                     'elon_id' => $elon->id,
                     'reason' => $request->admin_note,
@@ -264,14 +267,16 @@ class ElonManagementController extends Controller
             $elonlar = Elon::whereIn('id', $request->elon_ids)->get();
 
             foreach ($elonlar as $elon) {
-                $elon->approve('Bulk approved');
+                $elon->status = 'approved';
+                $elon->rad_sababi = null;
+                $elon->save();
 
                 // Send notification
                 Notification::create([
                     'user_id' => $elon->ustoz->user_id,
                     'type' => 'elon_approved',
                     'title' => 'E\'lon tasdiqlandi',
-                    'message' => "Sizning '{$elon->title}' e\'loningiz admin tomonidan tasdiqlandi.",
+                    'message' => "Sizning '{$elon->sarlavha}' e\'loningiz admin tomonidan tasdiqlandi.",
                     'data' => ['elon_id' => $elon->id],
                 ]);
             }
