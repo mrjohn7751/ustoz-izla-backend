@@ -68,6 +68,16 @@ class User extends Authenticatable
         return $this->hasMany(Rating::class);
     }
 
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function activeEnrollments()
+    {
+        return $this->hasMany(Enrollment::class)->where('status', 'active');
+    }
+
     public function comments()
     {
         return $this->hasMany(Comment::class);

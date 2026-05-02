@@ -13,6 +13,7 @@ class Rating extends Model
     protected $fillable = [
         'user_id',
         'ustoz_id',
+        'enrollment_id',
         'rating',
         'comment',
     ];
@@ -30,5 +31,10 @@ class Rating extends Model
     public function ustoz()
     {
         return $this->belongsTo(Ustoz::class);
+    }
+
+    public function enrollment()
+    {
+        return $this->belongsTo(Enrollment::class);
     }
 }

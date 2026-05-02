@@ -39,12 +39,12 @@ class UstozResource extends JsonResource
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
             
             // User relationship
-            'user' => [
+            'user' => $this->when($this->relationLoaded('user'), fn() => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'email' => $this->user->email,
                 'is_active' => $this->user->is_active,
-            ] when $this->relationLoaded('user'),
+            ]),
             
             // Related data when loaded
             'elonlar' => ElonResource::collection($this->whenLoaded('elonlar')),

@@ -59,6 +59,23 @@ class Ustoz extends Model
         return $this->hasMany(Rating::class, 'ustoz_id');
     }
 
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class, 'ustoz_id');
+    }
+
+    public function activeEnrollments()
+    {
+        return $this->hasMany(Enrollment::class, 'ustoz_id')->where('status', 'active');
+    }
+
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'enrollments', 'ustoz_id', 'user_id')
+                    ->withPivot('status', 'enrolled_at', 'can_rate', 'has_rated')
+                    ->withTimestamps();
+    }
+
     // Helpers
     public function getFullNameAttribute()
     {

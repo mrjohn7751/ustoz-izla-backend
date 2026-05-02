@@ -27,12 +27,12 @@ class CommentResource extends JsonResource
             'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
             
             // User relationship
-            'user' => [
+            'user' => $this->when($this->relationLoaded('user'), fn() => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,
                 'avatar' => $this->user->avatar ? asset('storage/' . $this->user->avatar) : null,
                 'role' => $this->user->role,
-            ] when $this->relationLoaded('user'),
+            ]),
         ];
     }
 

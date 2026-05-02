@@ -9,6 +9,7 @@ use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\FavoriteController;
 use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\ChatApiController;
+use App\Http\Controllers\API\EnrollmentController;
 
 Route::prefix('v1')->group(function () {
 
@@ -97,6 +98,18 @@ Route::prefix('v1')->group(function () {
         Route::get('/favorites', [FavoriteController::class, 'index']);
         Route::post('/favorites/{elonId}', [FavoriteController::class, 'store']);
         Route::delete('/favorites/{elonId}', [FavoriteController::class, 'destroy']);
+
+        // ENROLLMENTS (Kursga yozilish)
+        Route::post('/enrollments', [EnrollmentController::class, 'enroll']);
+        Route::get('/my-enrollments', [EnrollmentController::class, 'myEnrollments']);
+        Route::get('/enrollments/{id}', [EnrollmentController::class, 'show']);
+        Route::delete('/enrollments/{id}', [EnrollmentController::class, 'cancel']);
+        Route::post('/enrollments/{id}/complete', [EnrollmentController::class, 'complete']);
+        Route::post('/enrollments/{id}/rate', [EnrollmentController::class, 'rateTeacher']);
+        Route::get('/enrollments/{id}/can-rate', [EnrollmentController::class, 'checkCanRate']);
+
+        // Ustoz o'quvchilari
+        Route::get('/ustoz/my-students', [EnrollmentController::class, 'myStudents']);
 
         // Chat
         Route::get('/chats', [ChatApiController::class, 'index']);

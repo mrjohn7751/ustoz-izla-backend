@@ -60,6 +60,23 @@ class Elon extends Model
         return $this->morphMany(Favorite::class, 'favoritable');
     }
 
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function activeEnrollments()
+    {
+        return $this->hasMany(Enrollment::class)->where('status', 'active');
+    }
+
+    public function enrolledStudents()
+    {
+        return $this->belongsToMany(User::class, 'enrollments')
+                    ->withPivot('status', 'enrolled_at', 'can_rate', 'has_rated')
+                    ->withTimestamps();
+    }
+
     // Scopes
     public function scopeApproved($query)
     {
