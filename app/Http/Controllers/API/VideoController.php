@@ -25,7 +25,7 @@ class VideoController extends Controller
                 $query->where('status', $request->status);
             }
 
-            $videos = $query->orderBy('created_at', 'desc')->paginate(20);
+            $videos = $query->orderBy('created_at', 'desc')->paginate($request->get('per_page', 20));
 
             Log::info('VIDEO INDEX - Videos found', [
                 'count' => $videos->count(),

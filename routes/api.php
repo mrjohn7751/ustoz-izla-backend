@@ -10,6 +10,7 @@ use App\Http\Controllers\API\FavoriteController;
 use App\Http\Controllers\API\SearchController;
 use App\Http\Controllers\API\ChatApiController;
 use App\Http\Controllers\API\EnrollmentController;
+use App\Http\Controllers\API\TelegramAuthController;
 
 Route::prefix('v1')->group(function () {
 
@@ -18,6 +19,9 @@ Route::prefix('v1')->group(function () {
         // Auth routes - 10 requests per minute
         Route::post('/auth/register', [AuthController::class, 'register']);
         Route::post('/auth/login', [AuthController::class, 'login']);
+
+        // Telegram bot login (faqat bot uchun, X-Bot-Secret header bilan)
+        Route::post('/auth/telegram-login', [TelegramAuthController::class, 'login']);
     });
 
     // Public elonlar
